@@ -78,8 +78,6 @@ with tf.variable_scope(CRITIC_SUBSPACE_NAME):
     my_critic=critic.Critic(sess,STATE_SIZE,ACTION_SIZE,CRITIC_LEARNING_RATE,HIDDEN_SIZE_CRITIC,CRITIC_NAME,CRITIC_SUBSPACE_NAME)
 with tf.variable_scope(CRITIC_TARGET_SUBSPACE_NAME):
     my_critic_target=critic.Critic(sess,STATE_SIZE,ACTION_SIZE,CRITIC_LEARNING_RATE,HIDDEN_SIZE_CRITIC,CRITIC_TARGET_NAME,CRITIC_TARGET_SUBSPACE_NAME)
-#my_actor_target.weights=my_actor.weights
-#my_critic_target.weights=my_critic.weights
 update_target_ops = []
 with tf.variable_scope("TARGET_UPDATE"):
     for i in range(len(my_actor.weights)):
@@ -118,10 +116,6 @@ for episode in range(NUM_EPISODES):
         #Select action
         noise=exploration_noise[it]+exploration_noise[it]*NOISE_FACTOR
         action=exploration_noise[it]+my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
-        
-        #ATENCION MIRAR QUE TIPO DE ENTRADA ES
-        
-        #action=np.random.normal(0,noise_std)+my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
         if action>ACTION_RANGE:
             action[0][0]=ACTION_RANGE
         if action<-ACTION_RANGE:
