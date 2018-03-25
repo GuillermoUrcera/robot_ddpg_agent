@@ -8,7 +8,7 @@ Created on Thu Jan 18 18:38:28 2018
 import tensorflow as tf
 
 class Critic:
-    def __init__(self,sess,state_size,action_size,learning_rate,hidden_size,name,subspace_name):
+    def __init__(self,sess,state_size,action_size,learning_rate,hidden_size,name,subspace_name,L2):
         self.sess=sess
         self.learning_rate=learning_rate
         self.hidden_size=hidden_size
@@ -19,6 +19,9 @@ class Critic:
         self.target_Q=tf.placeholder(tf.float32,shape=(None,1),name="target_Q")
         self.loss=tf.reduce_mean(tf.square(self.target_Q-self.output),name="loss")
         self.weights = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=(subspace_name+"/"+name+"_network"))
+        for weight in self.weights:
+			if not 'bias' in weight.name:
+				self.loss+=L2*tf.nn.l2_loss(weight)
         self.Q_wrt_a_grads_op=tf.gradients(self.output,self.action_input_tensor,name="Q_wrt_a")
         self.train=tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss,var_list=self.weights)
     def createCritic(self,state_size,action_size):

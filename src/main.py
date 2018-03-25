@@ -33,13 +33,14 @@ VAR_SIZE_DIC={INDEX_STATE:STATE_SIZE,
               INDEX_LAST_STATE:STATE_SIZE,
               INDEX_ACTION:ACTION_SIZE}
 #Actor hyperparameters
-ACTOR_LEARNING_RATE=1e-3
+ACTOR_LEARNING_RATE=1e-4
 HIDDEN_SIZE_ACTOR=8
 ACTOR_NAME="actor"
 ACTOR_SUBSPACE_NAME="ACTOR_OPS"
 ACTOR_TARGET_NAME="actor_target"
 ACTOR_TARGET_SUBSPACE_NAME="TARGET_ACTOR_OPS"
 #Critic hyperparameters
+CRITIC_L2_WEIGHT_DECAY=1e-2
 CRITIC_LEARNING_RATE=1e-3
 HIDDEN_SIZE_CRITIC=8
 CRITIC_NAME="critic"
@@ -49,14 +50,17 @@ CRITIC_TARGET_SUBSPACE_NAME="TARGET_CRITIC_OPS"
 #Q function parameters:
 DISCOUNT=0.99
 #Algorithm parameters:
-LEARNING_HAS_STARTED=False
-NUM_EPISODES=15000
+LEARNING_HAS_STARTED=False #Don't change this, it's a flag
+NUM_EPISODES=10000
 EPOCHS_PER_EPISODE=200
 WARMUP=100000
 TRAINING_ITERATIONS_PER_EPISODE=1
 TAU=1e-2
-NOISE_FACTOR=1
-NOISE_MOD=0.999996
+NOISE_FACTOR=0.1
+NOISE_MOD=0.99
+OU_SPEED=0.15
+OU_MEAN=0
+OU_VOLATILITY=0.2
 #Program parameters:
 LOGS_PATH="../logs"
 SAVE_PATH="/tmp/model.ckpt"
@@ -66,8 +70,6 @@ VISUALIZATION_CHECKPOINT=100
 VISUALIZATION_ITERATIONS=500
 #Initialization
 tf.reset_default_graph()
-#gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
-#sess=tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 sess=tf.Session()
 replayMemory=replayMemory.replayMemory(MINIBATCH_SIZE,MEMORY_MAX_SIZE,VAR_SIZE_DIC)
 with tf.variable_scope(ACTOR_SUBSPACE_NAME):
@@ -75,10 +77,10 @@ with tf.variable_scope(ACTOR_SUBSPACE_NAME):
 with tf.variable_scope(ACTOR_TARGET_SUBSPACE_NAME):
     my_actor_target=actor.Actor(sess,STATE_SIZE,ACTION_SIZE,ACTOR_LEARNING_RATE,ACTION_RANGE,HIDDEN_SIZE_ACTOR,ACTOR_TARGET_NAME,ACTOR_TARGET_SUBSPACE_NAME,MINIBATCH_SIZE)
 with tf.variable_scope(CRITIC_SUBSPACE_NAME):
-    my_critic=critic.Critic(sess,STATE_SIZE,ACTION_SIZE,CRITIC_LEARNING_RATE,HIDDEN_SIZE_CRITIC,CRITIC_NAME,CRITIC_SUBSPACE_NAME)
+    my_critic=critic.Critic(sess,STATE_SIZE,ACTION_SIZE,CRITIC_LEARNING_RATE,HIDDEN_SIZE_CRITIC,CRITIC_NAME,CRITIC_SUBSPACE_NAME,CRITIC_L2_WEIGHT_DECAY)
 with tf.variable_scope(CRITIC_TARGET_SUBSPACE_NAME):
-    my_critic_target=critic.Critic(sess,STATE_SIZE,ACTION_SIZE,CRITIC_LEARNING_RATE,HIDDEN_SIZE_CRITIC,CRITIC_TARGET_NAME,CRITIC_TARGET_SUBSPACE_NAME)
-update_target_ops = []
+    my_critic_target=critic.Critic(sess,STATE_SIZE,ACTION_SIZE,CRITIC_LEARNING_RATE,HIDDEN_SIZE_CRITIC,CRITIC_TARGET_NAME,CRITIC_TARGET_SUBSPACE_NAME,CRITIC_L2_WEIGHT_DECAY)
+update_target_ops=[]
 with tf.variable_scope("TARGET_UPDATE"):
     for i in range(len(my_actor.weights)):
         update_target_op=my_actor_target.weights[i].assign(TAU*my_actor.weights[i]+(1-TAU)*my_actor_target.weights[i])
@@ -86,7 +88,7 @@ with tf.variable_scope("TARGET_UPDATE"):
     for i in range(len(my_critic.weights)):
         update_target_op=my_critic_target.weights[i].assign(TAU*my_critic.weights[i]+(1-TAU)*my_critic_target.weights[i])
         update_target_ops.append(update_target_op)
-OUP=OrnsteinUhlenbeckProcess(speed=0.15,mean=0,vol=0.2)
+OUP=OrnsteinUhlenbeckProcess(t=EPOCHS_PER_EPISODE,speed=OU_SPEED,mean=OU_MEAN,vol=OU_VOLATILITY)
 #Tensorboard
 writer=tf.summary.FileWriter(LOGS_PATH,sess.graph)
 loss_summary=tf.placeholder('float',name='Critic_loss_value')
@@ -94,9 +96,7 @@ reward_summary=tf.placeholder('float',name='Reward_value')
 loss_sum=tf.summary.scalar("Critic_loss", loss_summary)
 re_sum=tf.summary.scalar("reward", reward_summary)
 summaryMerged=tf.summary.merge_all()
-
 saver = tf.train.Saver()
-
 init_op=tf.global_variables_initializer()
 tf.get_default_graph().finalize()
 sess.run(init_op)
@@ -168,7 +168,7 @@ for episode in range(NUM_EPISODES):
     if episode%EPISODE_CHECKPOINT==0 and episode!=0:
         print "Episode",episode,"of",NUM_EPISODES
         if episode%VISUALIZATION_CHECKPOINT==0 and VISUALIZE and LEARNING_HAS_STARTED:
-			for e in range(20):
+			for e in range(2):
 				state=env.reset()
 				for i in range(VISUALIZATION_ITERATIONS):
 					env.render()
