@@ -57,7 +57,7 @@ WARMUP=100000
 TRAINING_ITERATIONS_PER_EPISODE=1
 TAU=1e-2
 NOISE_FACTOR=0.1
-NOISE_MOD=0.99
+NOISE_MOD=0.999
 OU_SPEED=0.15
 OU_MEAN=0
 OU_VOLATILITY=0.2
@@ -106,15 +106,13 @@ acc_reward=0
 epoch=0
 for episode in range(NUM_EPISODES):
     exploration_noise=OUP.sample(EPOCHS_PER_EPISODE-1)
-    for e in range(EPOCHS_PER_EPISODE):
-        exploration_noise[e]-=1
-    NOISE_FACTOR*=NOISE_MOD
+    noise_scale=(NOISE_FACTOR*NOISE_MOD**episode)*ACTION_RANGE
+    exploration_noise*=noise_scale
     state=env.reset()
     last_state=0
     it=0
     while True: #Goes on for 200 iterations
         #Select action
-        noise=exploration_noise[it]+exploration_noise[it]*NOISE_FACTOR
         action=exploration_noise[it]+my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
         if action>ACTION_RANGE:
             action[0][0]=ACTION_RANGE
