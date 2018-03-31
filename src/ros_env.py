@@ -18,19 +18,22 @@ class gazebo_env:
 		self.NUM_VIAPOINTS=5
 		self.OBSTACLE_NAMES=["obs_1","obs_2","obs_3"]
 		self.obstacle_positions=self.reset()
-	def step(self,action,input_obstacle_positions):
+	def step(self,action):
 		#step, return reward 
 		rospy.wait_for_service('env_loop_service')
 		try:			
 			client=rospy.ServiceProxy('env_loop_service',EnvLoopSrv)
 			#float64[] viapoints;int16 num_viapoints;float32 max_time;float32 max_x;float32 interval_time;string[] obstacles;int16 num_obstacles;float32[] obstacle_positions
-			response=client(action,self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,input_obstacle_positions)
-			return calculate_obstacle_positions(),response.reward
+			response=client(action,self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
+			# State for next episode
+			self.obstacle_positions=self.calculate_obstacle_positions()
+			return self.obstacle_positions,response.reward
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
 	def reset(self):
-		return self.calculate_obstacle_positions()
-	def calculate_obstacle_positions():
+		self.obstacle_positions=self.calculate_obstacle_positions()
+		return self.obstacle_positions
+	def calculate_obstacle_positions(self):
 		obs_pos=[]
 		for e in range(self.NUM_OBSTACLES):
 			obs_pos[e*2]=random.random()*self.MAX_X #X
