@@ -37,7 +37,7 @@ class gazebo_env:
 		obs_pos=[]
 		for e in range(self.NUM_OBSTACLES):
 			obs_pos.append(random.random()*self.MAX_X) #X
-			obs_pos.append(random.random()*self.MAX_VALUE) #Y
+			obs_pos.append(random.random()*self.MAX_VALUE*2-self.MAX_VALUE) #Y
 		return obs_pos
 		
 
