@@ -170,11 +170,3 @@ for episode in range(NUM_EPISODES):
 				env.render(close=True)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH
-"""
-while(True):
-    state=env.reset()
-    for i in range(VISUALIZATION_ITERATIONS*2):
-        env.render()
-        state, reward, done, info=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
-    env.render(close=True)
-"""
