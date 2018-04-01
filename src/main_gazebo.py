@@ -51,7 +51,7 @@ WARMUP=1000000
 EPISODES_PER_RECORD=100
 TRAINING_ITERATIONS_PER_EPISODE=1
 TAU=1e-2
-NOISE_FACTOR=1
+NOISE_FACTOR=0.1
 NOISE_MOD=0.999
 OU_SPEED=0.15
 OU_MEAN=0
@@ -84,7 +84,7 @@ with tf.variable_scope("TARGET_UPDATE"):
     for i in range(len(my_critic.weights)):
         update_target_op=my_critic_target.weights[i].assign(TAU*my_critic.weights[i]+(1-TAU)*my_critic_target.weights[i])
         update_target_ops.append(update_target_op)
-OUP=OrnsteinUhlenbeckProcess(t=EPOCHS_PER_EPISODE,speed=OU_SPEED,mean=OU_MEAN,vol=OU_VOLATILITY)
+OUP=OrnsteinUhlenbeckProcess(t=env.NUM_VIAPOINTS,speed=OU_SPEED,mean=OU_MEAN,vol=OU_VOLATILITY)
 #Tensorboard
 writer=tf.summary.FileWriter(LOGS_PATH,sess.graph)
 loss_summary=tf.placeholder('float',name='Critic_loss_value')
@@ -102,18 +102,20 @@ acc_reward=0
 epoch=0
 done=True
 for episode in range(NUM_EPISODES):
-    exploration_noise=OUP.sample(EPOCHS_PER_EPISODE-1)
-    noise_scale=(NOISE_FACTOR*NOISE_MOD**episode)*ACTION_RANGE*10
+    exploration_noise=OUP.sample(ACTION_SIZE)
+    exploration_noise=exploration_noise[1:]
+    noise_scale=(NOISE_FACTOR*NOISE_MOD**episode)*ACTION_RANGE
     exploration_noise*=noise_scale
     state=env.reset()
     last_state=state
     for it in range(EPOCHS_PER_EPISODE):
         #Select action
-        action=exploration_noise[it]+my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
-        if action>ACTION_RANGE:
-            action[0][0]=ACTION_RANGE
-        if action<-ACTION_RANGE:
-            action[0][0]=-ACTION_RANGE
+        action=exploration_noise+my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
+        for vp in range(ACTION_SIZE):
+			if action[0][vp]>ACTION_RANGE:
+				action[0][vp]=ACTION_RANGE
+			if action[0][vp]<-ACTION_RANGE:
+				action[0][vp]=-ACTION_RANGE
         #Store transition
         state, reward= env.step(action)
         state=np.reshape(state,(1,STATE_SIZE))
@@ -153,8 +155,8 @@ for episode in range(NUM_EPISODES):
                 mean_loss=float(loss)/EPISODES_PER_RECORD
                 summary_loss=sess.run(loss_sum,feed_dict={loss_summary:mean_loss})
                 writer.add_summary(summary_loss,episode)
-            acc_reward=0
-            loss=0
+                acc_reward=0
+                loss=0
             break
     #Examine algorithm:
     if episode%EPISODE_CHECKPOINT==0 and episode!=0:
