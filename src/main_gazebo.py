@@ -57,8 +57,8 @@ OU_SPEED=0.15
 OU_MEAN=0
 OU_VOLATILITY=0.2
 #Program parameters:
-LOGS_PATH="../logs"
-SAVE_PATH="/tmp/model.ckpt"
+LOGS_PATH="/tmp/ddpg_gazebo_logs"
+SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
 VISUALIZE=True
 EPISODE_CHECKPOINT=10
 VISUALIZATION_CHECKPOINT=100
