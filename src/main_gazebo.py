@@ -1,69 +1,63 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-import ros_env
 import replayMemory
 import actor
 import critic
+import gazebo_parameters
 import tensorflow as tf
 import numpy as np
 from stochastic.diffusion import OrnsteinUhlenbeckProcess
 
 #Environment
-env=ros_env.gazebo_env()
-ACTION_RANGE=env.MAX_VALUE
-STATE_SIZE=env.NUM_OBSTACLES*2
-ACTION_SIZE=env.NUM_VIAPOINTS-2
+env=gazebo_parameters.env
+ACTION_RANGE=gazebo_parameters.ACTION_RANGE
+STATE_SIZE=gazebo_parameters.STATE_SIZE
+ACTION_SIZE=gazebo_parameters.ACTION_SIZE
 #Memory
-MINIBATCH_SIZE=1024
-MEMORY_MAX_SIZE=int(1e5)
-INDEX_STATE=0
-INDEX_REWARD=1
-INDEX_DONE=2
-INDEX_LAST_STATE=3
-INDEX_ACTION=4
-VAR_SIZE_DIC={INDEX_STATE:STATE_SIZE,
-              INDEX_REWARD:1,
-              INDEX_DONE:1,
-              INDEX_LAST_STATE:STATE_SIZE,
-              INDEX_ACTION:ACTION_SIZE}
+MINIBATCH_SIZE=gazebo_parameters.MINIBATCH_SIZE
+MEMORY_MAX_SIZE=gazebo_parameters.MEMORY_MAX_SIZE
+INDEX_STATE=gazebo_parameters.INDEX_STATE
+INDEX_REWARD=gazebo_parameters.INDEX_REWARD
+INDEX_DONE=gazebo_parameters.INDEX_DONE
+INDEX_LAST_STATE=gazebo_parameters.INDEX_LAST_STATE
+INDEX_ACTION=gazebo_parameters.INDEX_ACTION
+VAR_SIZE_DIC=gazebo_parameters.VAR_SIZE_DIC
 #Actor hyperparameters
-ACTOR_LEARNING_RATE=1e-4
-HIDDEN_SIZE_ACTOR=64
-ACTOR_NAME="actor"
-ACTOR_SUBSPACE_NAME="ACTOR_OPS"
-ACTOR_TARGET_NAME="actor_target"
-ACTOR_TARGET_SUBSPACE_NAME="TARGET_ACTOR_OPS"
+ACTOR_LEARNING_RATE=gazebo_parameters.ACTOR_LEARNING_RATE
+HIDDEN_SIZE_ACTOR=gazebo_parameters.HIDDEN_SIZE_ACTOR
+ACTOR_NAME=gazebo_parameters.ACTOR_NAME
+ACTOR_SUBSPACE_NAME=gazebo_parameters.ACTOR_SUBSPACE_NAME
+ACTOR_TARGET_NAME=gazebo_parameters.ACTOR_TARGET_NAME
+ACTOR_TARGET_SUBSPACE_NAME=gazebo_parameters.ACTOR_TARGET_SUBSPACE_NAME
 #Critic hyperparameters
-CRITIC_L2_WEIGHT_DECAY=1e-2
-CRITIC_LEARNING_RATE=1e-3
-HIDDEN_SIZE_CRITIC=64
-CRITIC_NAME="critic"
-CRITIC_SUBSPACE_NAME="CRITIC_OPS"
-CRITIC_TARGET_NAME="critic_target"
-CRITIC_TARGET_SUBSPACE_NAME="TARGET_CRITIC_OPS"
+CRITIC_L2_WEIGHT_DECAY=gazebo_parameters.CRITIC_L2_WEIGHT_DECAY
+CRITIC_LEARNING_RATE=gazebo_parameters.CRITIC_LEARNING_RATE
+HIDDEN_SIZE_CRITIC=gazebo_parameters.HIDDEN_SIZE_CRITIC
+CRITIC_NAME=gazebo_parameters.CRITIC_NAME
+CRITIC_SUBSPACE_NAME=gazebo_parameters.CRITIC_SUBSPACE_NAME
+CRITIC_TARGET_NAME=gazebo_parameters.CRITIC_TARGET_NAME
+CRITIC_TARGET_SUBSPACE_NAME=gazebo_parameters.CRITIC_TARGET_SUBSPACE_NAME
 #Q function parameters:
-DISCOUNT=0.99
+DISCOUNT=gazebo_parameters.DISCOUNT
 #Algorithm parameters:
-LEARNING_HAS_STARTED=False #Don't change this, it's a flag
-NUM_EPISODES=100000
-EPOCHS_PER_EPISODE=2
-WARMUP=1000000
-EPISODES_PER_RECORD=100
-TRAINING_ITERATIONS_PER_EPISODE=1
-TAU=1e-2
-NOISE_FACTOR=0.1
-NOISE_MOD=0.999
-OU_SPEED=0.15
-OU_MEAN=0
-OU_VOLATILITY=0.2
+LEARNING_HAS_STARTED=gazebo_parameters.LEARNING_HAS_STARTED
+NUM_EPISODES=gazebo_parameters.NUM_EPISODES
+EPOCHS_PER_EPISODE=gazebo_parameters.EPOCHS_PER_EPISODE
+WARMUP=gazebo_parameters.WARMUP
+EPISODES_PER_RECORD=gazebo_parameters.EPISODES_PER_RECORD
+TRAINING_ITERATIONS_PER_EPISODE=gazebo_parameters.TRAINING_ITERATIONS_PER_EPISODE
+TAU=gazebo_parameters.TAU
+NOISE_FACTOR=gazebo_parameters.NOISE_FACTOR
+NOISE_MOD=gazebo_parameters.NOISE_MOD
+OU_SPEED=gazebo_parameters.OU_SPEED
+OU_MEAN=gazebo_parameters.OU_MEAN
+OU_VOLATILITY=gazebo_parameters.OU_VOLATILITY
 #Program parameters:
-LOGS_PATH="/tmp/ddpg_gazebo_logs"
-SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
-VISUALIZE=True
-EPISODE_CHECKPOINT=10
-VISUALIZATION_CHECKPOINT=100
-#VISUALIZATION_EPISODES=2
-#VISUALIZATION_ITERATIONS=500
+LOGS_PATH=gazebo_parameters.LOGS_PATH
+SAVE_PATH=gazebo_parameters.SAVE_PATH
+VISUALIZE=gazebo_parameters.VISUALIZE
+EPISODE_CHECKPOINT=gazebo_parameters.EPISODE_CHECKPOINT
+VISUALIZATION_CHECKPOINT=gazebo_parameters.VISUALIZATION_CHECKPOINT
 #Initialization
 tf.reset_default_graph()
 sess=tf.Session()
