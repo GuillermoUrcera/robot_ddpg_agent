@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 import gazebo_parameters
 import tensorflow as tf
 import numpy as np
@@ -16,7 +18,7 @@ MINIBATCH_SIZE=gazebo_parameters.MINIBATCH_SIZE
 SAVE_PATH=gazebo_parameters.SAVE_PATH
 
 # Evaluator parameters:
-EPISODES_TO_EVALUATE=5
+EPISODES_TO_EVALUATE=50
 EPOCHS_PER_EPISODE_TO_EVALUATE=500
 
 
