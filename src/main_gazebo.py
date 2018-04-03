@@ -100,11 +100,11 @@ for episode in range(NUM_EPISODES):
     exploration_noise=exploration_noise[1:]
     noise_scale=(NOISE_FACTOR*NOISE_MOD**episode)*ACTION_RANGE
     exploration_noise*=noise_scale
-    state=env.reset()
+    state=np.reshape(env.reset(),(1,STATE_SIZE))
     last_state=state
     for it in range(EPOCHS_PER_EPISODE):
         #Select action
-        action=exploration_noise+my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
+        action=exploration_noise+my_actor.predict(state)
         for vp in range(ACTION_SIZE):
 			if action[0][vp]>ACTION_RANGE:
 				action[0][vp]=ACTION_RANGE
@@ -155,12 +155,5 @@ for episode in range(NUM_EPISODES):
     #Examine algorithm:
     if episode%EPISODE_CHECKPOINT==0 and episode!=0:
         print "Episode",episode,"of",NUM_EPISODES
-        if episode%VISUALIZATION_CHECKPOINT==0 and VISUALIZE and LEARNING_HAS_STARTED:
-			for e in range(VISUALIZATION_EPISODES):
-				state=env.reset()
-				for i in range(VISUALIZATION_ITERATIONS):
-					env.render()
-					state, reward=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
-				env.render(close=True)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH
