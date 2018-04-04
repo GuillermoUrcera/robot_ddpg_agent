@@ -1,5 +1,13 @@
 import ros_env
 #Environment
+MAX_VALUE=5
+MAX_X=10
+NUM_OBSTACLES=3
+MAX_TIME=5
+INTERVAL_TIME=0.01
+NUM_VIAPOINTS=5
+OBSTACLE_NAMES=["obs_1","obs_2","obs_3"]
+
 env=ros_env.gazebo_env()
 ACTION_RANGE=env.MAX_VALUE
 STATE_SIZE=env.NUM_OBSTACLES*2
@@ -53,3 +61,5 @@ SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
 VISUALIZE=True
 EPISODE_CHECKPOINT=10
 VISUALIZATION_CHECKPOINT=100
+
+

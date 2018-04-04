@@ -3,20 +3,20 @@
 import sys
 import rospy
 import random
+import gazebo_parameters
 from robot_ddpg_gazebo.srv import *
 
 class gazebo_env:
 	def __init__(self):
-		# consts TODO make these be loadable some other way
-		self.MAX_VALUE=5
-		self.MAX_X=10
-		self.ITERATIONS_PER_CONFIG=100
-		self.CONFIGS_PER_RUN=100
-		self.NUM_OBSTACLES=3
-		self.MAX_TIME=5
-		self.INTERVAL_TIME=0.01
-		self.NUM_VIAPOINTS=5
-		self.OBSTACLE_NAMES=["obs_1","obs_2","obs_3"]
+		# consts 
+		self.MAX_VALUE=gazebo_parameters.MAX_VALUE
+		self.MAX_X=gazebo_parameters.MAX_X
+		self.NUM_OBSTACLES=gazebo_parameters.NUM_OBSTACLES
+		self.MAX_TIME=gazebo_parameters.MAX_TIME
+		self.INTERVAL_TIME=gazebo_parameters.INTERVAL_TIME
+		self.NUM_VIAPOINTS=gazebo_parameters.NUM_VIAPOINTS
+		self.OBSTACLE_NAMES=gazebo_parameters.OBSTACLE_NAMES
+		
 		self.obstacle_positions=self.reset()
 	def step(self,action):
 		#step, return reward 
