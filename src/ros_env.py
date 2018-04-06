@@ -4,6 +4,7 @@ import sys
 import rospy
 import random
 import gazebo_parameters
+import numpy as np
 from robot_ddpg_gazebo.srv import *
 
 class gazebo_env:
@@ -17,6 +18,8 @@ class gazebo_env:
 		self.NUM_VIAPOINTS=gazebo_parameters.NUM_VIAPOINTS
 		self.OBSTACLE_NAMES=gazebo_parameters.OBSTACLE_NAMES
 		self.PATH_REGULARIZATION_FACTOR=gazebo_parameters.PATH_REGULARIZATION_FACTOR
+		self.OBSTACLE_RADIUS=gazebo_parameters.OBSTACLE_RADIUS
+		self.X_BIAS=gazebo_parameters.X_BIAS
 		self.obstacle_positions=self.reset()
 	def step(self,action):
 		#step, return reward 
@@ -26,25 +29,38 @@ class gazebo_env:
 			#float64[] viapoints;int16 num_viapoints;float32 max_time;float32 max_x;float32 interval_time;string[] obstacles;int16 num_obstacles;float32[] obstacle_positions
 			response=client(action[0],self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
 			# State for next episode
-			self.obstacle_positions=self.calculate_obstacle_positions()
 			reward=0
 			reward-=abs(action[0][0]) #Add first viapoint
 			reward-=abs(action[0][self.NUM_VIAPOINTS-3]) #Add last viapoint
 			for i in range(self.NUM_VIAPOINTS-3): #For each viapoint 
 				reward-=abs(action[0][i+1]-action[0][i])
-			reward*=PATH_REGULARIZATION_FACTOR
+			reward*=self.PATH_REGULARIZATION_FACTOR
 			reward-=response.reward
-			return self.obstacle_positions,reward
+			return reward
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
 	def reset(self):
 		self.obstacle_positions=self.calculate_obstacle_positions()
 		return self.obstacle_positions
+	def distance(self,x1,y1,x2,y2):
+		vector=[x1-x2,y1-y2]
+		return np.linalg.norm(vector)
 	def calculate_obstacle_positions(self):
 		obs_pos=[]
+		obstacle_ok=False
 		for e in range(self.NUM_OBSTACLES):
-			obs_pos.append(random.random()*self.MAX_X) #X
-			obs_pos.append(random.random()*self.MAX_VALUE*2-self.MAX_VALUE) #Y
+			# Make sure obstacles don't spawn inside each other
+			while not obstacle_ok:
+				# Calculate a sample position
+				x_pos=random.random()*self.MAX_X+self.X_BIAS
+				y_pos=random.random()*self.MAX_VALUE*2-self.MAX_VALUE
+				obstacle_ok=True
+				for i in range(len(obs_pos)/2):
+					obstacle_ok*=self.distance(obs_pos[i*2],obs_pos[i*2+1],x_pos,y_pos)>self.OBSTACLE_RADIUS
+			# New positions are valid
+			obstacle_ok=False
+			obs_pos.append(x_pos) #X
+			obs_pos.append(y_pos) #Y
 		return obs_pos
 		
 
