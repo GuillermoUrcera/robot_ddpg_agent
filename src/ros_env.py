@@ -16,7 +16,7 @@ class gazebo_env:
 		self.INTERVAL_TIME=gazebo_parameters.INTERVAL_TIME
 		self.NUM_VIAPOINTS=gazebo_parameters.NUM_VIAPOINTS
 		self.OBSTACLE_NAMES=gazebo_parameters.OBSTACLE_NAMES
-		
+		self.PATH_REGULARIZATION_FACTOR=gazebo_parameters.PATH_REGULARIZATION_FACTOR
 		self.obstacle_positions=self.reset()
 	def step(self,action):
 		#step, return reward 
@@ -27,11 +27,13 @@ class gazebo_env:
 			response=client(action[0],self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
 			# State for next episode
 			self.obstacle_positions=self.calculate_obstacle_positions()
-			reward=response.reward
+			reward=0
 			reward-=abs(action[0][0]) #Add first viapoint
 			reward-=abs(action[0][self.NUM_VIAPOINTS-3]) #Add last viapoint
 			for i in range(self.NUM_VIAPOINTS-3): #For each viapoint 
 				reward-=abs(action[0][i+1]-action[0][i])
+			reward*=PATH_REGULARIZATION_FACTOR
+			reward-=response.reward
 			return self.obstacle_positions,reward
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
