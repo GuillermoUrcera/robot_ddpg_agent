@@ -22,20 +22,19 @@ class gazebo_env:
 		self.X_BIAS=gazebo_parameters.X_BIAS
 		self.obstacle_positions=self.reset()
 	def step(self,action):
-		#step, return reward 
+		action=np.array([np.concatenate([[0],action[0],[0]])])
 		rospy.wait_for_service('env_loop_service')
 		try:			
 			client=rospy.ServiceProxy('env_loop_service',EnvLoopSrv)
 			#float64[] viapoints;int16 num_viapoints;float32 max_time;float32 max_x;float32 interval_time;string[] obstacles;int16 num_obstacles;float32[] obstacle_positions
 			response=client(action[0],self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
-			# State for next episode
 			reward=0
 			reward-=abs(action[0][0]) #Add first viapoint
 			reward-=abs(action[0][self.NUM_VIAPOINTS-3]) #Add last viapoint
 			for i in range(self.NUM_VIAPOINTS-3): #For each viapoint 
 				reward-=abs(action[0][i+1]-action[0][i])
 			reward*=self.PATH_REGULARIZATION_FACTOR
-			reward-=response.reward
+			reward-=abs(response.reward)
 			return reward
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
