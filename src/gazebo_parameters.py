@@ -7,7 +7,7 @@ MAX_TIME=5
 INTERVAL_TIME=0.01
 NUM_VIAPOINTS=5
 OBSTACLE_NAMES=["obs_1","obs_2","obs_3"]
-PATH_REGULARIZATION_FACTOR=1.0
+PATH_REGULARIZATION_FACTOR=0.5
 OBSTACLE_RADIUS=0.75 #This value must be manually checked with the world you're using
 X_BIAS=1 #Safety margin from TCP starting position for obstacles to appear
 env=ros_env.gazebo_env()
@@ -46,7 +46,7 @@ CRITIC_TARGET_SUBSPACE_NAME="TARGET_CRITIC_OPS"
 DISCOUNT=0.99
 #Algorithm parameters:
 LEARNING_HAS_STARTED=False #Don't change this, it's a permanent flag
-NUM_EPISODES=800000
+NUM_EPISODES=100000
 EPOCHS_PER_EPISODE=1
 WARMUP=1000
 EPISODES_PER_RECORD=100
@@ -60,5 +60,6 @@ OU_VOLATILITY=0.2
 #Program parameters:
 LOGS_PATH="/tmp/ddpg_gazebo_logs"
 SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
+RESTORE_PREVIOUS_SESSION=True
 VISUALIZE=True
 EPISODE_CHECKPOINT=100
