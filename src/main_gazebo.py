@@ -55,6 +55,7 @@ OU_VOLATILITY=gazebo_parameters.OU_VOLATILITY
 #Program parameters:
 LOGS_PATH=gazebo_parameters.LOGS_PATH
 SAVE_PATH=gazebo_parameters.SAVE_PATH
+RESTORE_PREVIOUS_SESSION=gazebo_parameters.RESTORE_PREVIOUS_SESSION
 VISUALIZE=gazebo_parameters.VISUALIZE
 EPISODE_CHECKPOINT=gazebo_parameters.EPISODE_CHECKPOINT
 #Initialization
@@ -74,9 +75,16 @@ loss_sum=tf.summary.scalar("Critic_loss", loss_summary)
 re_sum=tf.summary.scalar("reward", reward_summary)
 summaryMerged=tf.summary.merge_all()
 saver = tf.train.Saver()
-init_op=tf.global_variables_initializer()
-tf.get_default_graph().finalize()
-sess.run(init_op)
+
+#Restore previous session?
+if RESTORE_PREVIOUS_SESSION:
+	saver.restore(sess,SAVE_PATH)
+	print "Restored previous session"
+	tf.get_default_graph().finalize()
+else:
+	init_op=tf.global_variables_initializer()
+	tf.get_default_graph().finalize()
+	sess.run(init_op)
 #Start algorithm
 loss=0
 acc_reward=0
