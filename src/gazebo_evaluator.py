@@ -35,5 +35,4 @@ saver = tf.train.Saver()
 saver.restore(sess,SAVE_PATH)
 for e in range(EPISODES_TO_EVALUATE):
 	state=env.reset()
-	for i in range(EPOCHS_PER_EPISODE_TO_EVALUATE):
-		state, reward=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
+	reward=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
