@@ -28,14 +28,7 @@ class gazebo_env:
 			client=rospy.ServiceProxy('env_loop_service',EnvLoopSrv)
 			#float64[] viapoints;int16 num_viapoints;float32 max_time;float32 max_x;float32 interval_time;string[] obstacles;int16 num_obstacles;float32[] obstacle_positions
 			response=client(action[0],self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
-			reward=0
-			reward-=abs(action[0][0]) #Add first viapoint
-			reward-=abs(action[0][self.NUM_VIAPOINTS-3]) #Add last viapoint
-			for i in range(self.NUM_VIAPOINTS-3): #For each viapoint 
-				reward-=abs(action[0][i+1]-action[0][i])
-			reward*=self.PATH_REGULARIZATION_FACTOR
-			reward-=abs(response.reward)
-			return reward
+			return response.reward
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
 	def reset(self):
