@@ -8,7 +8,6 @@ import time
 # Loaded parameters:
 env=gazebo_parameters.env
 
-
 # Evaluator parameters:
 EPISODES_TO_EVALUATE=1000
 
