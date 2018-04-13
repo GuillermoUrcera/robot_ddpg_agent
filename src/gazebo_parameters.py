@@ -60,6 +60,6 @@ OU_VOLATILITY=0.2
 #Program parameters:
 LOGS_PATH="/tmp/ddpg_gazebo_logs"
 SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
-RESTORE_PREVIOUS_SESSION=True
+RESTORE_PREVIOUS_SESSION=False
 VISUALIZE=True
 EPISODE_CHECKPOINT=100
