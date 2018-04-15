@@ -63,3 +63,6 @@ SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
 RESTORE_PREVIOUS_SESSION=False
 VISUALIZE=True
 EPISODE_CHECKPOINT=100
+#Testing parameters
+#These parameters are used in the file_to_gazebo program to construct the scene
+OBSTACLE_POSITIONS=[2,2,5,-1,8,4]
