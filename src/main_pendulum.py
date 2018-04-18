@@ -125,7 +125,7 @@ for episode in range(NUM_EPISODES):
         #Store transition
         state, reward, done, info = env.step(action)
         state=np.reshape(state,(1,STATE_SIZE))
-        if it>1:reward_clean_summary
+        if it>1:
             replayMemory.add(state,reward,done,last_state,action)
         acc_reward+=reward
         last_state=state
@@ -139,7 +139,7 @@ for episode in range(NUM_EPISODES):
             for i in range(TRAINING_ITERATIONS_PER_EPISODE):
                 #Sample minibatch
                 minibatch=replayMemory.get_batch()
-                S=replayMemory.geEPOCHS_PER_EPISODEt_from_minibatch(minibatch,INDEX_STATE)
+                S=replayMemory.get_from_minibatch(minibatch,INDEX_STATE)
                 St0=replayMemory.get_from_minibatch(minibatch,INDEX_LAST_STATE)
                 A=replayMemory.get_from_minibatch(minibatch,INDEX_ACTION)
                 D=replayMemory.get_from_minibatch(minibatch,INDEX_DONE)
@@ -167,10 +167,10 @@ for episode in range(NUM_EPISODES):
             loss=0
             break
     #Examine algorithm:
-    if episode%EPISODE_CHECKPOINT==0 and episode!=0:reward_clean_summary
+    if episode%EPISODE_CHECKPOINT==0 and episode!=0:
         print "Episode",episode,"of",NUM_EPISODES
         if episode%VISUALIZATION_CHECKPOINT==0 and VISUALIZE and LEARNING_HAS_STARTED:
-                        for e in range(2):Q_clean_summary
+                        for e in range(2):
 				state=env.reset()
 				for i in range(VISUALIZATION_ITERATIONS):
 					env.render()
@@ -185,7 +185,8 @@ for episode in range(NUM_EPISODES):
         last_state=0
         for episode in range(ONLINE_EVALUATION_EPISODES):
             while True: #Goes on for 200 iterations
-                action=my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
+                state=np.reshape(state,(1,STATE_SIZE))
+                action=my_actor.predict(state)
                 if action>ACTION_RANGE:
                     action[0][0]=ACTION_RANGE
                 if action<-ACTION_RANGE:
