@@ -17,7 +17,8 @@ class yumi_env:
 		self.PATH_REGULARIZATION_FACTOR=yumi_parameters.PATH_REGULARIZATION_FACTOR
 		self.OBSTACLE_RADIUS=yumi_parameters.OBSTACLE_RADIUS
 		self.X_BIAS=yumi_parameters.X_BIAS
-		self.obstacle_positions=self.reset()
+                self.obstacle_positions=self.getState()
+                rospy.init_node('yumi_env', anonymous=True)
 	def step(self,action):
 		action=np.array([np.concatenate([[0],action[0],[0]])])
 		rospy.wait_for_service('yumi_env_loop_service')
@@ -34,7 +35,6 @@ class yumi_env:
 			response=client()
 			if response.num_obstacles!=self.NUM_OBSTACLES:
 				print "Error: incorrect number of obstacles!"
-				break
 			else:
 				for obstacle in range(response.num_obstacles):
 					obs_pos.append(response.obstacle_positions[obstacle*2])   #X
