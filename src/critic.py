@@ -42,6 +42,9 @@ class Critic:
         feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
         self.sess.run(self.train,feed_dict)
         return self.sess.run(self.loss,feed_dict)
+    def getLoss(self,state,action,target_Q):
+        feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
+        return self.sess.run(self.loss,feed_dict)
     def getGradients(self,state,action):
         feed_dict={self.action_input_tensor:action,self.state_input_tensor:state}
         return self.sess.run(self.Q_wrt_a_grads_op,feed_dict)
