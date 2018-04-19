@@ -2,14 +2,15 @@ import ros_env
 #Environment
 MAX_VALUE=5.0
 MAX_X=10.0
-NUM_OBSTACLES=3
+NUM_OBSTACLES=4
 MAX_TIME=5
 INTERVAL_TIME=0.01
-NUM_VIAPOINTS=5
-OBSTACLE_NAMES=["obs_1","obs_2","obs_3"]
+NUM_VIAPOINTS=7
+OBSTACLE_NAMES=["obs_1","obs_2","obs_3","obs_4"]
 PATH_REGULARIZATION_FACTOR=0.5
 OBSTACLE_RADIUS=0.75 #This value must be manually checked with the world you're using
-X_BIAS=1 #Safety margin from TCP starting position for obstacles to appear
+X_BIAS=1 #Safety margin from TCP starting and end position for obstacles to appear
+Y_BIAS=0.75 #Multiplicative margin to apply to object generation in the Y dimension
 env=ros_env.gazebo_env()
 ACTION_RANGE=env.MAX_VALUE
 STATE_SIZE=env.NUM_OBSTACLES*2
@@ -63,6 +64,10 @@ SAVE_PATH="/tmp/ddpg_gazebo_model.ckpt"
 RESTORE_PREVIOUS_SESSION=False
 VISUALIZE=True
 EPISODE_CHECKPOINT=100
+ONLINE_EVALUATION=True
+ONLINE_EVALUATION_EPISODES=100
+ONLINE_EVALUATION_CHECKPOINT=200
 #Testing parameters
 #These parameters are used in the file_to_gazebo program to construct the scene
 OBSTACLE_POSITIONS=[2,2,5,-1,8,4]
+
