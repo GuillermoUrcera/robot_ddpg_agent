@@ -6,7 +6,7 @@ import csv
 import random
 
 # Loaded parameters:
-env=gazebo_parameters.env
+env=yumi_parameters.env
 ACTION_RANGE=yumi_parameters.ACTION_RANGE
 ACTION_SIZE=yumi_parameters.ACTION_SIZE
 
@@ -20,7 +20,7 @@ for episode in range(EPISODES_TO_EVALUATE):
 	raw_input("Press Enter to continue...")# This allows you to reset the experiment
 	#Generate random action
 	action_to_evaluate=[]
-	for e in range(ACTION_SIZE):
+        for e in range(ACTION_SIZE):
 		action_to_evaluate.append(random.random())
 	action_to_evaluate=np.array([action_to_evaluate])
 	#Get state
