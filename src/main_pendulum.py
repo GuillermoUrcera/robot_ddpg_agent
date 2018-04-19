@@ -176,12 +176,12 @@ for episode in range(NUM_EPISODES):
 					env.render()
 					state, reward, done, info=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
 				env.render(close=True)
-    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and ONLINE_EVALUATION_CHECKPOINT%episode==0:
+    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and episode%ONLINE_EVALUATION_CHECKPOINT==0:
         #Evaluate Q values, critic loss and reward
         tot_reward=0
         tot_Q=0
         tot_loss=0
-        for episode in range(ONLINE_EVALUATION_EPISODES):
+        for ev_episode in range(ONLINE_EVALUATION_EPISODES):
             state=env.reset()
             last_state=0
             while True: #Goes on for 200 iterations

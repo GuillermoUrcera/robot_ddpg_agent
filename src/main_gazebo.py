@@ -152,12 +152,12 @@ for episode in range(NUM_EPISODES):
     #Examine algorithm:
     if episode%EPISODE_CHECKPOINT==0 and episode!=0:
         print "Episode",episode,"of",NUM_EPISODES
-    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and ONLINE_EVALUATION_CHECKPOINT%episode==0:
+    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and episode%ONLINE_EVALUATION_CHECKPOINT==0:
         #Evaluate Q values, critic loss and reward
         tot_reward=0
         tot_Q=0
         tot_loss=0
-        for episode in range(ONLINE_EVALUATION_EPISODES):
+        for ev_episode in range(ONLINE_EVALUATION_EPISODES):
 			state=np.reshape(env.reset(),(1,STATE_SIZE))
 			action=my_actor.predict(state)
 			if action>ACTION_RANGE:
