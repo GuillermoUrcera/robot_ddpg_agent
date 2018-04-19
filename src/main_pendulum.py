@@ -194,7 +194,7 @@ for episode in range(NUM_EPISODES):
                 Q_clean_summary+=my_critic.predict(state,action)
                 state, reward, done, info = env.step(action)
                 reward_clean_summary+=reward
-                target_Q=reward+DISCOUNT*my_critic_target.predict(state,my_actor_target.predict(state))
+                target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,3),my_actor_target.predict(state.reshape(-1,3)))
                 loss_clean_summary+=my_critic.getLoss(last_state,action,target_Q)
                 if done:
                     break
