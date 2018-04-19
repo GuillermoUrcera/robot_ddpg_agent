@@ -20,6 +20,7 @@ class gazebo_env:
 		self.PATH_REGULARIZATION_FACTOR=gazebo_parameters.PATH_REGULARIZATION_FACTOR
 		self.OBSTACLE_RADIUS=gazebo_parameters.OBSTACLE_RADIUS
 		self.X_BIAS=gazebo_parameters.X_BIAS
+		self.Y_BIAS=gazebo_parameters.Y_BIAS
 		self.obstacle_positions=self.reset()
 	def step(self,action):
 		action=np.array([np.concatenate([[0],action[0],[0]])])
@@ -44,8 +45,12 @@ class gazebo_env:
 			# Make sure obstacles don't spawn inside each other
 			while not obstacle_ok:
 				# Calculate a sample position
-				x_pos=random.random()*self.MAX_X+self.X_BIAS
-				y_pos=random.random()*self.MAX_VALUE*2-self.MAX_VALUE
+				x_pos=random.random()*self.MAX_X
+				if x_pos<self.X_BIAS:
+					x_pos+=self.X_BIAS
+				else if x_pos>self.MAX_X-self.X_BIAS:
+					x_pos-=self.X_BIAS
+				y_pos=random.random()*self.MAX_VALUE*2*self.Y_BIAS-self.MAX_VALUE*self.Y_BIAS
 				obstacle_ok=True
 				for i in range(len(obs_pos)/2):
 					obstacle_ok*=self.distance(obs_pos[i*2],obs_pos[i*2+1],x_pos,y_pos)>self.OBSTACLE_RADIUS

@@ -5,7 +5,6 @@ Created on Wed Jan 17 20:26:09 2018
 
 @author: guille
 """
-import gym
 import replayMemory
 import actor
 import critic
@@ -66,6 +65,7 @@ VISUALIZATION_CHECKPOINT=pendulum_parameters.VISUALIZATION_CHECKPOINT
 VISUALIZATION_ITERATIONS=pendulum_parameters.VISUALIZATION_ITERATIONS
 ONLINE_EVALUATION=pendulum_parameters.ONLINE_EVALUATION
 ONLINE_EVALUATION_EPISODES=pendulum_parameters.ONLINE_EVALUATION_EPISODES
+ONLINE_EVALUATION_CHECKPOINT=pendulum_parameters.ONLINE_EVALUATION_CHECKPOINT
 #Initialization
 tf.reset_default_graph()
 sess=tf.Session()
@@ -96,9 +96,9 @@ re_sum=tf.summary.scalar("reward", reward_summary)
 Q_clean_summary=tf.placeholder('float',name='Clean_Q_value')
 reward_clean_summary=tf.placeholder('float',name='Clean_reward_value')
 loss_clean_summary=tf.placeholder('float',name='Loss_reward_value')
-clean_q_sum=tf.summary.scalar("Q", Q_clean_summary)
-clean_reward_sum=tf.summary.scalar("reward", reward_clean_summary)
-clean_loss_sum=tf.summary.scalar("Critic loss", loss_clean_summary)
+clean_q_sum=tf.summary.scalar("Q_evaluation", Q_clean_summary)
+clean_reward_sum=tf.summary.scalar("reward_evaluation", reward_clean_summary)
+clean_loss_sum=tf.summary.scalar("Critic_loss_evaluation", loss_clean_summary)
 summaryMerged=tf.summary.merge_all()
 saver = tf.train.Saver()
 init_op=tf.global_variables_initializer()
@@ -125,7 +125,7 @@ for episode in range(NUM_EPISODES):
         #Store transition
         state, reward, done, info = env.step(action)
         state=np.reshape(state,(1,STATE_SIZE))
-        if it>1:reward_clean_summary
+        if it>1:
             replayMemory.add(state,reward,done,last_state,action)
         acc_reward+=reward
         last_state=state
@@ -139,7 +139,7 @@ for episode in range(NUM_EPISODES):
             for i in range(TRAINING_ITERATIONS_PER_EPISODE):
                 #Sample minibatch
                 minibatch=replayMemory.get_batch()
-                S=replayMemory.geEPOCHS_PER_EPISODEt_from_minibatch(minibatch,INDEX_STATE)
+                S=replayMemory.get_from_minibatch(minibatch,INDEX_STATE)
                 St0=replayMemory.get_from_minibatch(minibatch,INDEX_LAST_STATE)
                 A=replayMemory.get_from_minibatch(minibatch,INDEX_ACTION)
                 D=replayMemory.get_from_minibatch(minibatch,INDEX_DONE)
@@ -167,39 +167,40 @@ for episode in range(NUM_EPISODES):
             loss=0
             break
     #Examine algorithm:
-    if episode%EPISODE_CHECKPOINT==0 and episode!=0:reward_clean_summary
+    if episode%EPISODE_CHECKPOINT==0 and episode!=0:
         print "Episode",episode,"of",NUM_EPISODES
         if episode%VISUALIZATION_CHECKPOINT==0 and VISUALIZE and LEARNING_HAS_STARTED:
-                        for e in range(2):Q_clean_summary
+                        for e in range(2):
 				state=env.reset()
 				for i in range(VISUALIZATION_ITERATIONS):
 					env.render()
 					state, reward, done, info=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
 				env.render(close=True)
-    if LEARNING_HAS_STARTED and ONLINE_EVALUATION:
+    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and ONLINE_EVALUATION_CHECKPOINT%episode==0:
         #Evaluate Q values, critic loss and reward
-        reward_clean_summary=0
-        Q_clean_summary=0
-        loss_clean_summary=0
-        state=env.reset()
-        last_state=0
+        tot_reward=0
+        tot_Q=0
+        tot_loss=0
         for episode in range(ONLINE_EVALUATION_EPISODES):
+            state=env.reset()
+            last_state=0
             while True: #Goes on for 200 iterations
-                action=my_actor.predict(np.reshape(state,(1,STATE_SIZE)))
+                state=np.reshape(state,(1,STATE_SIZE))
+                action=my_actor.predict(state)
                 if action>ACTION_RANGE:
                     action[0][0]=ACTION_RANGE
                 if action<-ACTION_RANGE:
                     action[0][0]=-ACTION_RANGE
                 last_state=state
-                Q_clean_summary+=my_critic.predict(state,action)
+                tot_Q+=my_critic.predict(state,action)
                 state, reward, done, info = env.step(action)
-                reward_clean_summary+=reward
-                target_Q=reward+DISCOUNT*my_critic_target.predict(state,my_actor_target.predict(state))
-                loss_clean_summary+=my_critic.getLoss(last_state,action,target_Q)
+                tot_reward+=reward
+                target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,3),my_actor_target.predict(state.reshape(-1,3)))
+                tot_loss+=my_critic.getLoss(last_state,action,target_Q)
                 if done:
                     break
-        writer.add_summary(sess.run(clean_q_sum,feed_dict={Q_clean_summary:tf.div(Q_clean_summary,ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
-        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tf.div(reward_clean_summary,ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
-        writer.add_summary(sess.run(clean_loss_sum,feed_dict={loss_clean_summary:tf.div(loss_clean_summary,ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_q_sum,feed_dict={Q_clean_summary:tot_Q[0][0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward[0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_loss_sum,feed_dict={loss_clean_summary:tot_loss/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH

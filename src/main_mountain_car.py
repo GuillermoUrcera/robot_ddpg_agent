@@ -64,6 +64,9 @@ EPISODE_CHECKPOINT=mountain_car_parameters.EPISODE_CHECKPOINT
 VISUALIZATION_CHECKPOINT=mountain_car_parameters.VISUALIZATION_CHECKPOINT
 VISUALIZATION_EPISODES=mountain_car_parameters.VISUALIZATION_EPISODES
 VISUALIZATION_ITERATIONS=mountain_car_parameters.VISUALIZATION_ITERATIONS
+ONLINE_EVALUATION=gazebo_parameters.ONLINE_EVALUATION
+ONLINE_EVALUATION_EPISODES=gazebo_parameters.ONLINE_EVALUATION_EPISODES
+ONLINE_EVALUATION_CHECKPOINT=gazebo_parameters.ONLINE_EVALUATION_CHECKPOINT
 #Initialization
 tf.reset_default_graph()
 sess=tf.Session()
@@ -91,6 +94,12 @@ loss_summary=tf.placeholder('float',name='Critic_loss_value')
 reward_summary=tf.placeholder('float',name='Reward_value')
 loss_sum=tf.summary.scalar("Critic_loss", loss_summary)
 re_sum=tf.summary.scalar("reward", reward_summary)
+Q_clean_summary=tf.placeholder('float',name='Clean_Q_value')
+reward_clean_summary=tf.placeholder('float',name='Clean_reward_value')
+loss_clean_summary=tf.placeholder('float',name='Loss_reward_value')
+clean_q_sum=tf.summary.scalar("Q_evaluation", Q_clean_summary)
+clean_reward_sum=tf.summary.scalar("reward_evaluation", reward_clean_summary)
+clean_loss_sum=tf.summary.scalar("Critic_loss_evaluation", loss_clean_summary)
 summaryMerged=tf.summary.merge_all()
 saver = tf.train.Saver()
 init_op=tf.global_variables_initializer()
@@ -169,5 +178,34 @@ for episode in range(NUM_EPISODES):
 					env.render()
 					state, reward, done, info=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
 				env.render(close=True)
+    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and ONLINE_EVALUATION_CHECKPOINT%episode==0:
+        #Evaluate Q values, critic loss and reward
+        tot_reward=0
+        tot_Q=0
+        tot_loss=0
+        for episode in range(ONLINE_EVALUATION_EPISODES):
+			state=env.reset()
+			last_state=0
+            for iteration in range(EPOCHS_PER_EPISODE):
+                state=np.reshape(state,(1,STATE_SIZE))
+                action=my_actor.predict(state)
+                if action>ACTION_RANGE:
+                    action[0][0]=ACTION_RANGE
+                if action<-ACTION_RANGE:
+                    action[0][0]=-ACTION_RANGE
+                last_state=state
+                tot_Q+=my_critic.predict(state,action)
+                state, reward, done, info = env.step(action)
+                tot_reward+=reward
+                if done:
+					target_Q=reward
+				else:
+					target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,3),my_actor_target.predict(state.reshape(-1,3)))
+                tot_loss+=my_critic.getLoss(last_state,action,target_Q)
+                if done:
+                    break
+        writer.add_summary(sess.run(clean_q_sum,feed_dict={Q_clean_summary:tot_Q[0][0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward[0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_loss_sum,feed_dict={loss_clean_summary:tot_loss/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH
