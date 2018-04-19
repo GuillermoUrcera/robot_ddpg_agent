@@ -5,7 +5,6 @@ Created on Wed Jan 17 20:26:09 2018
 
 @author: guille
 """
-import gym
 import replayMemory
 import actor
 import critic
