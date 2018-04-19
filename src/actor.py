@@ -28,7 +28,6 @@ class Actor:
             h1=tf.layers.dense(state_input_tensor,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
             h2=tf.layers.dense(h1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
             h3=tf.layers.dense(h2,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_3",reuse=False)
-            #h4=tf.layers.dense(h3,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_4")
             output=tf.multiply(tf.layers.dense(h3,action_size,activation=tf.nn.tanh,name="output_layer",reuse=False),self.action_range)
         return output
     def predict(self,state):
