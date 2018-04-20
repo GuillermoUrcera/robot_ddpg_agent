@@ -50,7 +50,7 @@ OU_VOLATILITY=0.2
 #Program parameters:
 LOGS_PATH="/tmp/mountain_car_logs"
 SAVE_PATH="/tmp/mountain_car_model.ckpt"
-VISUALIZE=True
+VISUALIZE=False
 EPISODE_CHECKPOINT=10
 VISUALIZATION_CHECKPOINT=100
 VISUALIZATION_EPISODES=4
