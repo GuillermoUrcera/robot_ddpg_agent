@@ -184,8 +184,8 @@ for episode in range(NUM_EPISODES):
         tot_Q=0
         tot_loss=0
         for ev_episode in range(ONLINE_EVALUATION_EPISODES):
-			state=env.reset()
-			last_state=0
+	    state=env.reset()
+	    last_state=0
             for iteration in range(EPOCHS_PER_EPISODE):
                 state=np.reshape(state,(1,STATE_SIZE))
                 action=my_actor.predict(state)
@@ -198,9 +198,9 @@ for episode in range(NUM_EPISODES):
                 state, reward, done, info = env.step(action)
                 tot_reward+=reward
                 if done:
-					target_Q=reward
-				else:
-					target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,3),my_actor_target.predict(state.reshape(-1,3)))
+		    target_Q=reward
+		else:
+		    target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,STATE_SIZE),my_actor_target.predict(state.reshape(-1,STATE_SIZE)))
                 tot_loss+=my_critic.getLoss(last_state,action,target_Q)
                 if done:
                     break
