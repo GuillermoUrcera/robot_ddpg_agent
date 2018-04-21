@@ -1,16 +1,16 @@
 import ros_env
 #Environment
-MAX_VALUE=5.0
-MAX_X=10.0
+MAX_VALUE=1.9
+MAX_X=3.8
 NUM_OBSTACLES=4
 MAX_TIME=3
 INTERVAL_TIME=0.01
 NUM_VIAPOINTS=7
 OBSTACLE_NAMES=["obs_1","obs_2","obs_3","obs_4"]
 PATH_REGULARIZATION_FACTOR=0.5
-OBSTACLE_RADIUS=0.75 #This value must be manually checked with the world you're using
-X_BIAS=1 #Safety margin from TCP starting and end position for obstacles to appear
-Y_BIAS=0.75 #Multiplicative margin to apply to object generation in the Y dimension
+OBSTACLE_RADIUS=0.333 #This value must be manually checked with the world you're using
+X_BIAS=0.5 #Safety margin from TCP starting and end position for obstacles to appear
+Y_BIAS=1.0 #Multiplicative margin to apply to object generation in the Y dimension
 env=ros_env.gazebo_env()
 ACTION_RANGE=env.MAX_VALUE
 STATE_SIZE=env.NUM_OBSTACLES*2
