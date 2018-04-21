@@ -22,6 +22,8 @@ class gazebo_env:
 		self.X_BIAS=gazebo_parameters.X_BIAS
 		self.Y_BIAS=gazebo_parameters.Y_BIAS
 		self.obstacle_positions=self.reset()
+		self.distance_covered=0
+		self.obs_dis=0
 	def step(self,action):
 		action=np.array([np.concatenate([[0],action[0],[0]])])
 		rospy.wait_for_service('env_loop_service')
@@ -29,6 +31,9 @@ class gazebo_env:
 			client=rospy.ServiceProxy('env_loop_service',EnvLoopSrv)
 			#float64[] viapoints;int16 num_viapoints;float32 max_time;float32 max_x;float32 interval_time;string[] obstacles;int16 num_obstacles;float32[] obstacle_positions
 			response=client(action[0],self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
+			self.distance_covered=response.distance_covered
+			self.obs_dis=response.obstacle_displacement
+			self.reward=response.reward
 			return response.reward
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
@@ -48,7 +53,7 @@ class gazebo_env:
 				x_pos=random.random()*self.MAX_X
 				if x_pos<self.X_BIAS:
 					x_pos+=self.X_BIAS
-				else if x_pos>self.MAX_X-self.X_BIAS:
+				elif x_pos>self.MAX_X-self.X_BIAS:
 					x_pos-=self.X_BIAS
 				y_pos=random.random()*self.MAX_VALUE*2*self.Y_BIAS-self.MAX_VALUE*self.Y_BIAS
 				obstacle_ok=True
@@ -59,5 +64,7 @@ class gazebo_env:
 			obs_pos.append(x_pos) #X
 			obs_pos.append(y_pos) #Y
 		return obs_pos
-		
-
+	def getDetailedResponse(self):
+		return self.distance_covered, self.obs_dis, self.reward
+	def setState(self,state_to_set):
+		self.obstacle_positions=state_to_set
