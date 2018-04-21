@@ -198,14 +198,16 @@ for episode in range(NUM_EPISODES):
                 state, reward, done, info = env.step(action)
                 tot_reward+=reward
                 if done:
-		    target_Q=reward
-		else:
-		    target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,STATE_SIZE),my_actor_target.predict(state.reshape(-1,STATE_SIZE)))
+                    target_Q=reward
+                    target_Q=np.array(target_Q)
+                    target_Q=target_Q.reshape(1,1)
+                else:
+                    target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,STATE_SIZE),my_actor_target.predict(state.reshape(-1,STATE_SIZE)))
                 tot_loss+=my_critic.getLoss(last_state,action,target_Q)
                 if done:
                     break
         writer.add_summary(sess.run(clean_q_sum,feed_dict={Q_clean_summary:tot_Q[0][0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
-        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward[0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
         writer.add_summary(sess.run(clean_loss_sum,feed_dict={loss_clean_summary:tot_loss/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH
