@@ -19,6 +19,7 @@ class Critic:
         self.target_Q=tf.placeholder(tf.float32,shape=(None,1),name="target_Q")
         self.loss=tf.reduce_mean(tf.square(self.target_Q-self.output),name="loss")
         self.weights = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=(subspace_name+"/"+name+"_network"))
+        extra_update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,scope=(subspace_name+"/"+name+"_network"))
         for weight in self.weights:
 			if not 'bias' in weight.name:
 				self.loss+=L2*tf.nn.l2_loss(weight)
@@ -26,8 +27,10 @@ class Critic:
         self.train=tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss,var_list=self.weights)
     def createCritic(self,state_size,action_size):
         with tf.variable_scope(self.name+"_network"):
-            critic_input=tf.layers.dense(self.state_input_tensor,self.hidden_size,activation=tf.nn.relu,name="input_layer_1",reuse=False)
-            concat_layer=tf.concat([critic_input,self.action_input_tensor],1)
+            batch_norm_input=tf.layers.batch_normalization(state_input_tensor,name="Batch_norm_on_input",reuse=False)
+            critic_input=tf.layers.dense(batch_norm_input,self.hidden_size,activation=tf.nn.relu,name="input_layer_1",reuse=False)
+            batch_norm_1=tf.layers.batch_normalization(critic_input,name="Batch_norm_1",reuse=False)
+            concat_layer=tf.concat([batch_norm_1,self.action_input_tensor],1)
             h1=tf.layers.dense(concat_layer,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
             h2=tf.layers.dense(h1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
             h3=tf.layers.dense(h2,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_3",reuse=False)
@@ -39,6 +42,7 @@ class Critic:
     def trainModel(self,state,action,target_Q):
         feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
         self.sess.run(self.train,feed_dict)
+        self.sess.run(extra_update_ops)
         return self.sess.run(self.loss,feed_dict)
     def getLoss(self,state,action,target_Q):
         feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
