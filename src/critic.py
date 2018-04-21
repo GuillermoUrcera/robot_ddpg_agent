@@ -25,10 +25,10 @@ class Critic:
         self.Q_wrt_a_grads_op=tf.gradients(self.output,self.action_input_tensor,name="Q_wrt_a")
         self.train=tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss,var_list=self.weights)
     def createCritic(self,state_size,action_size):
-        # TODO  change layers in which action and state are introduced
         with tf.variable_scope(self.name+"_network"):
-            critic_input=tf.concat([self.state_input_tensor,self.action_input_tensor],1)
-            h1=tf.layers.dense(critic_input,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
+            critic_input=tf.layers.dense(self.state_input_tensor,self.hidden_size,activation=tf.nn.relu,name="input_layer_1",reuse=False)
+            concat_layer=tf.concat([critic_input,self.action_input_tensor],1)
+            h1=tf.layers.dense(concat_layer,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
             h2=tf.layers.dense(h1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
             h3=tf.layers.dense(h2,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_3",reuse=False)
             output=tf.layers.dense(h3,1,activation=None,name="output_layer")#None is linear
