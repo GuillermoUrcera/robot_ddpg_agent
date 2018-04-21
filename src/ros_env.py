@@ -48,7 +48,7 @@ class gazebo_env:
 				x_pos=random.random()*self.MAX_X
 				if x_pos<self.X_BIAS:
 					x_pos+=self.X_BIAS
-				else if x_pos>self.MAX_X-self.X_BIAS:
+				elif x_pos>self.MAX_X-self.X_BIAS:
 					x_pos-=self.X_BIAS
 				y_pos=random.random()*self.MAX_VALUE*2*self.Y_BIAS-self.MAX_VALUE*self.Y_BIAS
 				obstacle_ok=True
