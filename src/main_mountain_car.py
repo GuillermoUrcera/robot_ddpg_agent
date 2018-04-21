@@ -5,70 +5,68 @@ Created on Wed Jan 17 20:26:09 2018
 
 @author: guille
 """
-import gym
 import replayMemory
 import actor
 import critic
 import tensorflow as tf
 import numpy as np
+import mountain_car_parameters
 from stochastic.diffusion import OrnsteinUhlenbeckProcess
 
 #Environment
-ENVIRONMENT='MountainCarContinuous-v0'
-env=gym.make(ENVIRONMENT)
-ACTION_RANGE=env.action_space.high[0]
-STATE_SIZE=env.observation_space.shape[0]
-ACTION_SIZE=env.action_space.shape[0]
+env=mountain_car_parameters.env
+ACTION_RANGE=mountain_car_parameters.ACTION_RANGE
+STATE_SIZE=mountain_car_parameters.STATE_SIZE
+ACTION_SIZE=mountain_car_parameters.ACTION_SIZE
 #Memory
-MINIBATCH_SIZE=1024
-MEMORY_MAX_SIZE=int(1e5)
-INDEX_STATE=0
-INDEX_REWARD=1
-INDEX_DONE=2
-INDEX_LAST_STATE=3
-INDEX_ACTION=4
-VAR_SIZE_DIC={INDEX_STATE:STATE_SIZE,
-              INDEX_REWARD:1,
-              INDEX_DONE:1,
-              INDEX_LAST_STATE:STATE_SIZE,
-              INDEX_ACTION:ACTION_SIZE}
+MINIBATCH_SIZE=mountain_car_parameters.MINIBATCH_SIZE
+MEMORY_MAX_SIZE=mountain_car_parameters.MEMORY_MAX_SIZE
+INDEX_STATE=mountain_car_parameters.INDEX_STATE
+INDEX_REWARD=mountain_car_parameters.INDEX_REWARD
+INDEX_DONE=mountain_car_parameters.INDEX_DONE
+INDEX_LAST_STATE=mountain_car_parameters.INDEX_LAST_STATE
+INDEX_ACTION=mountain_car_parameters.INDEX_ACTION
+VAR_SIZE_DIC=mountain_car_parameters.VAR_SIZE_DIC
 #Actor hyperparameters
-ACTOR_LEARNING_RATE=1e-4
-HIDDEN_SIZE_ACTOR=64
-ACTOR_NAME="actor"
-ACTOR_SUBSPACE_NAME="ACTOR_OPS"
-ACTOR_TARGET_NAME="actor_target"
-ACTOR_TARGET_SUBSPACE_NAME="TARGET_ACTOR_OPS"
+ACTOR_LEARNING_RATE=mountain_car_parameters.ACTOR_LEARNING_RATE
+HIDDEN_SIZE_ACTOR=mountain_car_parameters.HIDDEN_SIZE_ACTOR
+ACTOR_NAME=mountain_car_parameters.ACTOR_NAME
+ACTOR_SUBSPACE_NAME=mountain_car_parameters.ACTOR_SUBSPACE_NAME
+ACTOR_TARGET_NAME=mountain_car_parameters.ACTOR_TARGET_NAME
+ACTOR_TARGET_SUBSPACE_NAME=mountain_car_parameters.ACTOR_TARGET_SUBSPACE_NAME
 #Critic hyperparameters
-CRITIC_L2_WEIGHT_DECAY=1e-2
-CRITIC_LEARNING_RATE=1e-3
-HIDDEN_SIZE_CRITIC=64
-CRITIC_NAME="critic"
-CRITIC_SUBSPACE_NAME="CRITIC_OPS"
-CRITIC_TARGET_NAME="critic_target"
-CRITIC_TARGET_SUBSPACE_NAME="TARGET_CRITIC_OPS"
+CRITIC_L2_WEIGHT_DECAY=mountain_car_parameters.CRITIC_L2_WEIGHT_DECAY
+CRITIC_LEARNING_RATE=mountain_car_parameters.CRITIC_LEARNING_RATE
+HIDDEN_SIZE_CRITIC=mountain_car_parameters.HIDDEN_SIZE_CRITIC
+CRITIC_NAME=mountain_car_parameters.CRITIC_NAME
+CRITIC_SUBSPACE_NAME=mountain_car_parameters.CRITIC_SUBSPACE_NAME
+CRITIC_TARGET_NAME=mountain_car_parameters.CRITIC_TARGET_NAME
+CRITIC_TARGET_SUBSPACE_NAME=mountain_car_parameters.CRITIC_TARGET_SUBSPACE_NAME
 #Q function parameters:
-DISCOUNT=0.99
+DISCOUNT=mountain_car_parameters.DISCOUNT
 #Algorithm parameters:
-LEARNING_HAS_STARTED=False #Don't change this, it's a flag
-NUM_EPISODES=10000
-EPOCHS_PER_EPISODE=5000
-WARMUP=1000000
-TRAINING_ITERATIONS_PER_EPISODE=1
-TAU=1e-2
-NOISE_FACTOR=1
-NOISE_MOD=0.999
-OU_SPEED=0.15
-OU_MEAN=0
-OU_VOLATILITY=0.2
+LEARNING_HAS_STARTED=mountain_car_parameters.LEARNING_HAS_STARTED 
+NUM_EPISODES=mountain_car_parameters.NUM_EPISODES
+EPOCHS_PER_EPISODE=mountain_car_parameters.EPOCHS_PER_EPISODE
+WARMUP=mountain_car_parameters.WARMUP
+TRAINING_ITERATIONS_PER_EPISODE=mountain_car_parameters.TRAINING_ITERATIONS_PER_EPISODE
+TAU=mountain_car_parameters.TAU
+NOISE_FACTOR=mountain_car_parameters.NOISE_FACTOR
+NOISE_MOD=mountain_car_parameters.NOISE_MOD
+OU_SPEED=mountain_car_parameters.OU_SPEED
+OU_MEAN=mountain_car_parameters.OU_MEAN
+OU_VOLATILITY=mountain_car_parameters.OU_VOLATILITY
 #Program parameters:
-LOGS_PATH="../logs"
-SAVE_PATH="/tmp/model.ckpt"
-VISUALIZE=True
-EPISODE_CHECKPOINT=10
-VISUALIZATION_CHECKPOINT=100
-VISUALIZATION_EPISODES=4
-VISUALIZATION_ITERATIONS=500
+LOGS_PATH=mountain_car_parameters.LOGS_PATH
+SAVE_PATH=mountain_car_parameters.SAVE_PATH
+VISUALIZE=mountain_car_parameters.VISUALIZE
+EPISODE_CHECKPOINT=mountain_car_parameters.EPISODE_CHECKPOINT
+VISUALIZATION_CHECKPOINT=mountain_car_parameters.VISUALIZATION_CHECKPOINT
+VISUALIZATION_EPISODES=mountain_car_parameters.VISUALIZATION_EPISODES
+VISUALIZATION_ITERATIONS=mountain_car_parameters.VISUALIZATION_ITERATIONS
+ONLINE_EVALUATION=mountain_car_parameters.ONLINE_EVALUATION
+ONLINE_EVALUATION_EPISODES=mountain_car_parameters.ONLINE_EVALUATION_EPISODES
+ONLINE_EVALUATION_CHECKPOINT=mountain_car_parameters.ONLINE_EVALUATION_CHECKPOINT
 #Initialization
 tf.reset_default_graph()
 sess=tf.Session()
@@ -96,6 +94,12 @@ loss_summary=tf.placeholder('float',name='Critic_loss_value')
 reward_summary=tf.placeholder('float',name='Reward_value')
 loss_sum=tf.summary.scalar("Critic_loss", loss_summary)
 re_sum=tf.summary.scalar("reward", reward_summary)
+Q_clean_summary=tf.placeholder('float',name='Clean_Q_value')
+reward_clean_summary=tf.placeholder('float',name='Clean_reward_value')
+loss_clean_summary=tf.placeholder('float',name='Loss_reward_value')
+clean_q_sum=tf.summary.scalar("Q_evaluation", Q_clean_summary)
+clean_reward_sum=tf.summary.scalar("reward_evaluation", reward_clean_summary)
+clean_loss_sum=tf.summary.scalar("Critic_loss_evaluation", loss_clean_summary)
 summaryMerged=tf.summary.merge_all()
 saver = tf.train.Saver()
 init_op=tf.global_variables_initializer()
@@ -174,13 +178,36 @@ for episode in range(NUM_EPISODES):
 					env.render()
 					state, reward, done, info=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
 				env.render(close=True)
+    if LEARNING_HAS_STARTED and ONLINE_EVALUATION and episode%ONLINE_EVALUATION_CHECKPOINT==0:
+        #Evaluate Q values, critic loss and reward
+        tot_reward=0
+        tot_Q=0
+        tot_loss=0
+        for ev_episode in range(ONLINE_EVALUATION_EPISODES):
+	    state=env.reset()
+	    last_state=0
+            for iteration in range(EPOCHS_PER_EPISODE):
+                state=np.reshape(state,(1,STATE_SIZE))
+                action=my_actor.predict(state)
+                if action>ACTION_RANGE:
+                    action[0][0]=ACTION_RANGE
+                if action<-ACTION_RANGE:
+                    action[0][0]=-ACTION_RANGE
+                last_state=state
+                tot_Q+=my_critic.predict(state,action)
+                state, reward, done, info = env.step(action)
+                tot_reward+=reward
+                if done:
+                    target_Q=reward
+                    target_Q=np.array(target_Q)
+                    target_Q=target_Q.reshape(1,1)
+                else:
+                    target_Q=reward+DISCOUNT*my_critic_target.predict(state.reshape(-1,STATE_SIZE),my_actor_target.predict(state.reshape(-1,STATE_SIZE)))
+                tot_loss+=my_critic.getLoss(last_state,action,target_Q)
+                if done:
+                    break
+        writer.add_summary(sess.run(clean_q_sum,feed_dict={Q_clean_summary:tot_Q[0][0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_loss_sum,feed_dict={loss_clean_summary:tot_loss/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH
-"""
-while(True):
-    state=env.reset()
-    for i in range(VISUALIZATION_ITERATIONS*2):
-        env.render()
-        state, reward, done, info=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
-    env.render(close=True)
-"""

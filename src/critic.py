@@ -27,12 +27,10 @@ class Critic:
     def createCritic(self,state_size,action_size):
         # TODO  change layers in which action and state are introduced
         with tf.variable_scope(self.name+"_network"):
-            #critic_input=tf.layers.flatten(tf.concat([self.state_input_tensor,self.action_input_tensor],1),name="concat_layer")
             critic_input=tf.concat([self.state_input_tensor,self.action_input_tensor],1)
             h1=tf.layers.dense(critic_input,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
             h2=tf.layers.dense(h1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
             h3=tf.layers.dense(h2,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_3",reuse=False)
-            #h4=tf.layers.dense(h3,self.hidden_size,activation_fn=tf.nn.relu,name="hidden_layer_4")
             output=tf.layers.dense(h3,1,activation=None,name="output_layer")#None is linear
         return output
     def predict(self,state,action):
@@ -41,6 +39,9 @@ class Critic:
     def trainModel(self,state,action,target_Q):
         feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
         self.sess.run(self.train,feed_dict)
+        return self.sess.run(self.loss,feed_dict)
+    def getLoss(self,state,action,target_Q):
+        feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
         return self.sess.run(self.loss,feed_dict)
     def getGradients(self,state,action):
         feed_dict={self.action_input_tensor:action,self.state_input_tensor:state}
