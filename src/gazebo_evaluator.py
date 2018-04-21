@@ -4,6 +4,7 @@ import gazebo_parameters
 import tensorflow as tf
 import numpy as np
 import actor
+import csv
 
 # Loaded parameters:
 env=gazebo_parameters.env
@@ -19,8 +20,6 @@ SAVE_PATH=gazebo_parameters.SAVE_PATH
 
 # Evaluator parameters:
 EPISODES_TO_EVALUATE=50
-EPOCHS_PER_EPISODE_TO_EVALUATE=500
-
 
 # Program start
 tf.reset_default_graph()
@@ -31,8 +30,14 @@ with tf.variable_scope(ACTOR_SUBSPACE_NAME):
 
 saver = tf.train.Saver()
 
+target_file=open("/tmp/ddpg_in_gazebo.csv","w")
+writer=csv.writer(target_file,delimiter=';') #print: Distance;Obstacle displacement;reward
+
 # Restore variables from disk.
 saver.restore(sess,SAVE_PATH)
 for e in range(EPISODES_TO_EVALUATE):
-	state=env.reset()
-	reward=env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
+	env.setState(gazebo_parameters.OBSTACLE_POSITIONS)
+	env.step(my_actor.predict(np.reshape(state,(1,STATE_SIZE))))
+	distance_covered, obs_dis, reward=env.getDetailedResponse()
+	writer.writerow([distance_covered,obs_dis,reward])
+target_file.close()
