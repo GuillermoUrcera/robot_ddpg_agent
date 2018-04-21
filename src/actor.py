@@ -26,7 +26,7 @@ class Actor:
         self.train=tf.train.AdamOptimizer(learning_rate).apply_gradients(grads)
     def createActor(self,state_input_tensor,action_size):
         with tf.variable_scope(self.name+"_network"):
-			batch_norm_input=tf.layers.batch_normalization(state_input_tensor,name="Batch_norm_on_input",reuse=False)
+            batch_norm_input=tf.layers.batch_normalization(state_input_tensor,name="Batch_norm_on_input",reuse=False)
             h1=tf.layers.dense(batch_norm_input,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
             batch_norm1=tf.layers.batch_normalization(h1,name="Batch_norm_on_h1",reuse=False)
             h2=tf.layers.dense(batch_norm1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
