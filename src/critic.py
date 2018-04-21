@@ -27,7 +27,7 @@ class Critic:
         self.train=tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss,var_list=self.weights)
     def createCritic(self,state_size,action_size):
         with tf.variable_scope(self.name+"_network"):
-            batch_norm_input=tf.layers.batch_normalization(state_input_tensor,name="Batch_norm_on_input",reuse=False)
+            batch_norm_input=tf.layers.batch_normalization(self.state_input_tensor,name="Batch_norm_on_input",reuse=False)
             critic_input=tf.layers.dense(batch_norm_input,self.hidden_size,activation=tf.nn.relu,name="input_layer_1",reuse=False)
             batch_norm_1=tf.layers.batch_normalization(critic_input,name="Batch_norm_1",reuse=False)
             concat_layer=tf.concat([batch_norm_1,self.action_input_tensor],1)
