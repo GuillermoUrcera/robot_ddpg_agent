@@ -70,8 +70,8 @@ class gazebo_env:
 		tuple_list=sorted(tuple_list,key=lambda obstacle: obstacle[0])
 		# Return list
 		for e in range(self.NUM_OBSTACLES):
-			return_list.append(tuple_list[e*2][0])
-			return_list.append(tuple_list[e*2+1][1])
+			return_list.append(tuple_list[e][0])
+			return_list.append(tuple_list[e][1])
 		return return_list
 
 
