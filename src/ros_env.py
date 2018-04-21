@@ -25,7 +25,7 @@ class gazebo_env:
 	def step(self,action):
 		action=np.array([np.concatenate([[0],action[0],[0]])])
 		rospy.wait_for_service('env_loop_service')
-		try:			
+		try:
 			client=rospy.ServiceProxy('env_loop_service',EnvLoopSrv)
 			#float64[] viapoints;int16 num_viapoints;float32 max_time;float32 max_x;float32 interval_time;string[] obstacles;int16 num_obstacles;float32[] obstacle_positions
 			response=client(action[0],self.NUM_VIAPOINTS,self.MAX_TIME,self.MAX_X,self.INTERVAL_TIME,self.OBSTACLE_NAMES,self.NUM_OBSTACLES,self.obstacle_positions)
@@ -34,7 +34,8 @@ class gazebo_env:
 			print "Service call failed: %s"%e
 	def reset(self):
 		self.obstacle_positions=self.calculate_obstacle_positions()
-		return self.obstacle_positions
+		reordered_obs_pos=self.reorder_obs_pos(self.obstacle_positions)
+		return reordered_obs_pos
 	def distance(self,x1,y1,x2,y2):
 		vector=[x1-x2,y1-y2]
 		return np.linalg.norm(vector)
@@ -48,7 +49,7 @@ class gazebo_env:
 				x_pos=random.random()*self.MAX_X
 				if x_pos<self.X_BIAS:
 					x_pos+=self.X_BIAS
-				else if x_pos>self.MAX_X-self.X_BIAS:
+				elif x_pos>self.MAX_X-self.X_BIAS:
 					x_pos-=self.X_BIAS
 				y_pos=random.random()*self.MAX_VALUE*2*self.Y_BIAS-self.MAX_VALUE*self.Y_BIAS
 				obstacle_ok=True
@@ -59,5 +60,19 @@ class gazebo_env:
 			obs_pos.append(x_pos) #X
 			obs_pos.append(y_pos) #Y
 		return obs_pos
-		
+	def reorder_obs_pos(self,original_obs):
+		# Create tuples
+		tuple_list=[]
+		return_list=[]
+		for obs in range(self.NUM_OBSTACLES):
+			tuple_list.append((original_obs[obs*2],original_obs[obs*2+1]))
+		# Order tuples
+		tuple_list=sorted(tuple_list,key=lambda obstacle: obstacle[0])
+		# Return list
+		for e in range(self.NUM_OBSTACLES):
+			return_list.append(tuple_list[e*2][0])
+			return_list.append(tuple_list[e*2+1][1])
+		return return_list
+
+
 
