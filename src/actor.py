@@ -17,6 +17,7 @@ class Actor:
         self.name=name
         self.output=self.createActor(self.state_input_tensor,action_size)
         self.weights=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope=(subspace_name+"/"+name+"_network"))
+        extra_update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,scope=(subspace_name+"/"+name+"_network"))
         self.combined_grads=tf.gradients(self.output,self.weights,-self.Q_wrt_a,name="a_wrt_weights_X_Q_wrt_a")
         factor=1/float(minibatch_size)
         for e in range(len(self.combined_grads)):
@@ -25,10 +26,14 @@ class Actor:
         self.train=tf.train.AdamOptimizer(learning_rate).apply_gradients(grads)
     def createActor(self,state_input_tensor,action_size):
         with tf.variable_scope(self.name+"_network"):
-            h1=tf.layers.dense(state_input_tensor,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
-            h2=tf.layers.dense(h1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
-            h3=tf.layers.dense(h2,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_3",reuse=False)
-            output=tf.multiply(tf.layers.dense(h3,action_size,activation=tf.nn.tanh,name="output_layer",reuse=False),self.action_range)
+			batch_norm_input=tf.layers.batch_normalization(state_input_tensor,name="Batch_norm_on_input",reuse=False)
+            h1=tf.layers.dense(batch_norm_input,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_1",reuse=False)
+            batch_norm1=tf.layers.batch_normalization(h1,name="Batch_norm_on_h1",reuse=False)
+            h2=tf.layers.dense(batch_norm1,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_2",reuse=False)
+            batch_norm2=tf.layers.batch_normalization(h2,name="Batch_norm_on_h2",reuse=False)
+            h3=tf.layers.dense(batch_norm2,self.hidden_size,activation=tf.nn.relu,name="hidden_layer_3",reuse=False)
+            batch_norm3=tf.layers.batch_normalization(h3,name="Batch_norm_on_h3",reuse=False)
+            output=tf.multiply(tf.layers.dense(batch_norm3,action_size,activation=tf.nn.tanh,name="output_layer",reuse=False),self.action_range)
         return output
     def predict(self,state):
         feed_dict={self.state_input_tensor:state}
@@ -36,3 +41,4 @@ class Actor:
     def trainModel(self,states,Q_wrt_a):
         feed_dict={self.state_input_tensor:states,self.Q_wrt_a:Q_wrt_a}
         self.sess.run(self.train,feed_dict)
+        self.sess.run(extra_update_ops)
