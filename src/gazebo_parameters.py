@@ -69,5 +69,5 @@ ONLINE_EVALUATION_EPISODES=100
 ONLINE_EVALUATION_CHECKPOINT=200
 #Testing parameters
 #These parameters are used in the file_to_gazebo program to construct the scene
-OBSTACLE_POSITIONS=[2,2,5,-1,8,4]
+OBSTACLE_POSITIONS=[2,2,5,-1,8,4,2,5]
 
