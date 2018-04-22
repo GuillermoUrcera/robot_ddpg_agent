@@ -17,7 +17,7 @@ class Actor:
         self.name=name
         self.output=self.createActor(self.state_input_tensor,action_size)
         self.weights=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope=(subspace_name+"/"+name+"_network"))
-        extra_update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,scope=(subspace_name+"/"+name+"_network"))
+        self.extra_update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,scope=(subspace_name+"/"+name+"_network"))
         self.combined_grads=tf.gradients(self.output,self.weights,-self.Q_wrt_a,name="a_wrt_weights_X_Q_wrt_a")
         factor=1/float(minibatch_size)
         for e in range(len(self.combined_grads)):
@@ -41,4 +41,4 @@ class Actor:
     def trainModel(self,states,Q_wrt_a):
         feed_dict={self.state_input_tensor:states,self.Q_wrt_a:Q_wrt_a}
         self.sess.run(self.train,feed_dict)
-        self.sess.run(extra_update_ops)
+        self.sess.run(self.extra_update_ops)
