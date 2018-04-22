@@ -160,10 +160,11 @@ for episode in range(NUM_EPISODES):
         for ev_episode in range(ONLINE_EVALUATION_EPISODES):
 			state=np.reshape(env.reset(),(1,STATE_SIZE))
 			action=my_actor.predict(state)
-			if action>ACTION_RANGE:
-				action[0][0]=ACTION_RANGE
-			if action<-ACTION_RANGE:
-				action[0][0]=-ACTION_RANGE
+			for vp in range(ACTION_SIZE):
+				if action[0][vp]>ACTION_RANGE:
+					action[0][vp]=ACTION_RANGE
+				if action[0][vp]<-ACTION_RANGE:
+					action[0][vp]=-ACTION_RANGE
 			last_state=state
 			tot_Q+=my_critic.predict(state,action)
 			reward=env.step(action)
