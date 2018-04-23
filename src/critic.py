@@ -19,7 +19,7 @@ class Critic:
         self.target_Q=tf.placeholder(tf.float32,shape=(None,1),name="target_Q")
         self.loss=tf.reduce_mean(tf.square(self.target_Q-self.output),name="loss")
         self.weights = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=(subspace_name+"/"+name+"_network"))
-        extra_update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,scope=(subspace_name+"/"+name+"_network"))
+        self.extra_update_ops=tf.get_collection(tf.GraphKeys.UPDATE_OPS,scope=(subspace_name+"/"+name+"_network"))
         for weight in self.weights:
 			if not 'bias' in weight.name:
 				self.loss+=L2*tf.nn.l2_loss(weight)
@@ -42,7 +42,7 @@ class Critic:
     def trainModel(self,state,action,target_Q):
         feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
         self.sess.run(self.train,feed_dict)
-        self.sess.run(extra_update_ops)
+        self.sess.run(self.extra_update_ops)
         return self.sess.run(self.loss,feed_dict)
     def getLoss(self,state,action,target_Q):
         feed_dict={self.state_input_tensor:state,self.action_input_tensor:action,self.target_Q:target_Q}
