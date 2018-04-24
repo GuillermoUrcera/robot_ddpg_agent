@@ -170,9 +170,11 @@ for episode in range(NUM_EPISODES):
 			reward=env.step(action)
 			tot_reward+=reward
 			target_Q=reward
+			target_Q=np.array(target_Q)
+			target_Q=target_Q.reshape(1,1)
 			tot_loss+=my_critic.getLoss(last_state,action,target_Q)
         writer.add_summary(sess.run(clean_q_sum,feed_dict={Q_clean_summary:tot_Q[0][0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
-        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward[0]/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
+        writer.add_summary(sess.run(clean_reward_sum,feed_dict={reward_clean_summary:tot_reward/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
         writer.add_summary(sess.run(clean_loss_sum,feed_dict={loss_clean_summary:tot_loss/(ONLINE_EVALUATION_EPISODES*EPOCHS_PER_EPISODE)}),episode)
 saver.save(sess,SAVE_PATH)
 print "Model saved in path: ",SAVE_PATH
